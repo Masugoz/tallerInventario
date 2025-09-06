@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Venta extends Model
 {
@@ -11,9 +12,9 @@ class Venta extends Model
     
     protected $table = 'ventas';
     protected $primaryKey = 'id';
-    public $incrementing = true;
+    public $incrementing = true; // ID es SERIAL (autoincremental)
     protected $keyType = 'int';
-    public $timestamps = false;
+    public $timestamps = false; // Sin timestamps de Laravel
     
     protected $fillable = [
         'product_id',
@@ -24,21 +25,16 @@ class Venta extends Model
     ];
     
     protected $casts = [
+        'product_id' => 'integer',
         'precio_unitario' => 'decimal:2',
         'total' => 'decimal:2',
-        'cantidad_vendida' => 'integer'
-        // Removemos el cast de fecha para evitar conflictos
+        'cantidad_vendida' => 'integer',
+        'fecha' => 'datetime'
     ];
     
     // Relación con producto
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'product_id', 'codigo');
-    }
-    
-    // Accessor para formatear fecha en las vistas
-    public function getFechaAttribute($value)
-    {
-        return \Carbon\Carbon::parse($value);
     }
 }

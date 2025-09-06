@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Productos</title>
+    <title>Gestionar Productos - Inventario</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,141 +15,240 @@
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
         h1 {
             text-align: center;
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 2.2em;
         }
         .actions {
-            margin-bottom: 20px;
             display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
             gap: 10px;
         }
         .btn {
-            padding: 10px 15px;
+            padding: 12px 20px;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-weight: bold;
             border: none;
             cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            font-size: 14px;
         }
         .btn-primary {
             background-color: #007bff;
             color: white;
         }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
         .btn-secondary {
             background-color: #6c757d;
             color: white;
         }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
         .btn-warning {
             background-color: #ffc107;
-            color: black;
+            color: #212529;
+            padding: 8px 12px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
         }
         .btn-danger {
             background-color: #dc3545;
             color: white;
+            padding: 8px 12px;
+            font-size: 12px;
         }
-        .btn:hover {
-            opacity: 0.8;
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .table-responsive {
+            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         th, td {
+            border: 1px solid #dee2e6;
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
         }
         th {
             background-color: #f8f9fa;
             font-weight: bold;
+            color: #495057;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
         tr:hover {
-            background-color: #f8f9fa;
+            background-color: #f0f0f0;
         }
-        .alert {
-            padding: 15px;
+        .no-products {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .no-products h3 {
+            color: #999;
             margin-bottom: 20px;
-            border-radius: 5px;
         }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .table-actions {
+            white-space: nowrap;
+            text-align: center;
         }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .codigo {
+            text-align: center;
+            font-weight: bold;
+            color: #007bff;
         }
-        .actions-cell {
-            display: flex;
-            gap: 5px;
+        .precio {
+            text-align: right;
+            font-weight: bold;
+        }
+        .cantidad {
+            text-align: center;
+        }
+        .stock-low {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .stock-medium {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .stock-high {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .nombre-producto {
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px 4px;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            .actions {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Lista de Productos</h1>
+        <h1>📦 Gestionar Productos</h1>
         
-        <div class="actions">
-            <a href="{{ route('productos.create') }}" class="btn btn-primary">Nuevo Producto</a>
-            <a href="{{ route('menu') }}" class="btn btn-secondary">Regresar al Menú</a>
-        </div>
-        
+        <!-- Mensajes de éxito/error -->
         @if(session('success'))
             <div class="alert alert-success">
-                {{ session('success') }}
+                ✅ {{ session('success') }}
             </div>
         @endif
         
         @if(session('error'))
             <div class="alert alert-error">
-                {{ session('error') }}
+                ❌ {{ session('error') }}
             </div>
         @endif
         
+        <!-- Botones de acción -->
+        <div class="actions">
+            <a href="{{ route('productos.create') }}" class="btn btn-primary">➕ Agregar Nuevo Producto</a>
+            <a href="/menu" class="btn btn-secondary">🏠 Regresar al Menú</a>
+        </div>
+        
+        <!-- Tabla de productos -->
         @if($productos->count() > 0)
-            <table>
-                <thead>
-                    <tr>
-                        <th>Código Producto</th>
-                        <th>Nombre Producto</th>
-                        <th>Descripción</th>
-                        <th>Cantidad</th>
-                        <th>Precio</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($productos as $producto)
+            <div class="table-responsive">
+                <table>
+                    <thead>
                         <tr>
-                            <td>{{ $producto->codigo }}</td>
-                            <td>{{ $producto->nombre }}</td>
-                            <td>{{ $producto->descripcion ?? 'Sin descripción' }}</td>
-                            <td>{{ $producto->cantidad }}</td>
-                            <td>${{ number_format($producto->precio, 2) }}</td>
-                            <td class="actions-cell">
-                                <a href="{{ route('productos.edit', $producto->codigo) }}" class="btn btn-warning">Editar</a>
-                                <form action="{{ route('productos.destroy', $producto->codigo) }}" method="POST" style="display: inline;" onsubmit="return confirm('¿Está seguro de eliminar este producto?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                                </form>
-                            </td>
+                            <th>Código</th>
+                            <th>Nombre Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Acciones</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach($productos as $producto)
+                            <tr>
+                                <td class="codigo">{{ $producto->codigo }}</td>
+                                <td class="nombre-producto">{{ $producto->nombre }}</td>
+                                <td class="cantidad">
+                                    <span class="{{ $producto->cantidad <= 5 ? 'stock-low' : ($producto->cantidad <= 20 ? 'stock-medium' : 'stock-high') }}">
+                                        {{ $producto->cantidad }}
+                                    </span>
+                                </td>
+                                <td class="precio">${{ number_format($producto->precio, 2) }}</td>
+                                <td class="table-actions">
+                                    <a href="{{ route('productos.edit', $producto->codigo) }}" class="btn btn-warning">✏️ Editar</a>
+                                    <form action="{{ route('productos.destroy', $producto->codigo) }}" method="POST" style="display: inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar este producto?\\n\\nProducto: {{ $producto->nombre }}\\nCódigo: {{ $producto->codigo }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+                <strong>Total de productos:</strong> {{ $productos->count() }}
+                <br>
+                <strong>Valor total del inventario:</strong> ${{ number_format($productos->sum(function($p) { return $p->precio * $p->cantidad; }), 2) }}
+            </div>
         @else
-            <div class="alert alert-error">
-                No hay productos registrados.
+            <div class="no-products">
+                <h3>📋 No hay productos registrados</h3>
+                <p>No hay productos registrados en el sistema.</p>
+                <a href="{{ route('productos.create') }}" class="btn btn-primary">➕ Agregar Primer Producto</a>
             </div>
         @endif
     </div>

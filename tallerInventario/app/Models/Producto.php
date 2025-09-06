@@ -11,9 +11,9 @@ class Producto extends Model
     
     protected $table = 'productos';
     protected $primaryKey = 'codigo';
-    public $incrementing = false;
-    protected $keyType = 'string';
-    public $timestamps = false;
+    public $incrementing = false; // No es autoincremental
+    protected $keyType = 'int'; // Clave primaria es INT
+    public $timestamps = false; // Sin timestamps
     
     protected $fillable = [
         'codigo',
@@ -24,7 +24,7 @@ class Producto extends Model
     ];
     
     protected $casts = [
-        'codigo' => 'string',
+        'codigo' => 'integer',
         'precio' => 'decimal:2',
         'cantidad' => 'integer'
     ];

@@ -12,88 +12,122 @@ class ProductoController extends Controller
     // Mostrar lista de productos
     public function index()
     {
-        $productos = Producto::all();
+        $productos = Producto::orderBy('codigo', 'asc')->get();
         return view('productos.index', compact('productos'));
     }
-         
+    
     // Mostrar formulario para crear producto
     public function create()
     {
         return view('productos.create');
     }
-         
+    
     // Guardar nuevo producto
     public function store(Request $request)
     {
         $request->validate([
-            'codigo' => 'required|unique:productos,codigo|max:20',
-            'nombre' => 'required|max:100',
-            'descripcion' => 'nullable',
+            'codigo' => 'required|integer|unique:productos,codigo|min:1',
+            'nombre' => 'required|string|max:100',
+            'descripcion' => 'nullable|string',
             'cantidad' => 'required|integer|min:0',
             'precio' => 'required|numeric|min:0'
+        ], [
+            'codigo.required' => 'El código del producto es obligatorio.',
+            'codigo.integer' => 'El código debe ser un número entero.',
+            'codigo.unique' => 'Ya existe un producto con este código.',
+            'codigo.min' => 'El código debe ser mayor a 0.',
+            'nombre.required' => 'El nombre del producto es obligatorio.',
+            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
+            'cantidad.required' => 'La cantidad es obligatoria.',
+            'cantidad.integer' => 'La cantidad debe ser un número entero.',
+            'cantidad.min' => 'La cantidad no puede ser negativa.',
+            'precio.required' => 'El precio es obligatorio.',
+            'precio.numeric' => 'El precio debe ser un número.',
+            'precio.min' => 'El precio no puede ser negativo.'
         ]);
         
         try {
-            // Asegurar que el código sea string
-            $data = $request->all();
-            $data['codigo'] = (string) $data['codigo'];
-            
-            Producto::create($data);
+            $producto = new Producto();
+            $producto->codigo = (int) $request->codigo;
+            $producto->nombre = $request->nombre;
+            $producto->descripcion = $request->descripcion;
+            $producto->cantidad = (int) $request->cantidad;
+            $producto->precio = $request->precio;
+            $producto->save();
             
             return redirect()->route('productos.index')
-                            ->with('success', 'Producto creado exitosamente.');
+                           ->with('success', 'Producto creado exitosamente.');
         } catch (\Exception $e) {
             Log::error('Error al crear producto: ' . $e->getMessage());
             return redirect()->back()
-                            ->with('error', 'Error al crear el producto.')
-                            ->withInput();
+                           ->with('error', 'Error al crear el producto: ' . $e->getMessage())
+                           ->withInput();
         }
     }
-         
+    
     // Mostrar formulario para editar producto
     public function edit($codigo)
     {
-        $producto = Producto::where('codigo', (string) $codigo)->firstOrFail();
-        return view('productos.edit', compact('producto'));
+        try {
+            $producto = Producto::where('codigo', (int) $codigo)->firstOrFail();
+            return view('productos.edit', compact('producto'));
+        } catch (\Exception $e) {
+            return redirect()->route('productos.index')
+                           ->with('error', 'Producto no encontrado.');
+        }
     }
-         
+    
     // Actualizar producto
     public function update(Request $request, $codigo)
     {
         $request->validate([
-            'codigo' => 'required|max:20|unique:productos,codigo,' . $codigo . ',codigo',
-            'nombre' => 'required|max:100',
-            'descripcion' => 'nullable',
+            'codigo' => 'required|integer|unique:productos,codigo,' . $codigo . ',codigo|min:1',
+            'nombre' => 'required|string|max:100',
+            'descripcion' => 'nullable|string',
             'cantidad' => 'required|integer|min:0',
             'precio' => 'required|numeric|min:0'
+        ], [
+            'codigo.required' => 'El código del producto es obligatorio.',
+            'codigo.integer' => 'El código debe ser un número entero.',
+            'codigo.unique' => 'Ya existe otro producto con este código.',
+            'codigo.min' => 'El código debe ser mayor a 0.',
+            'nombre.required' => 'El nombre del producto es obligatorio.',
+            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
+            'cantidad.required' => 'La cantidad es obligatoria.',
+            'cantidad.integer' => 'La cantidad debe ser un número entero.',
+            'cantidad.min' => 'La cantidad no puede ser negativa.',
+            'precio.required' => 'El precio es obligatorio.',
+            'precio.numeric' => 'El precio debe ser un número.',
+            'precio.min' => 'El precio no puede ser negativo.'
         ]);
         
         try {
-            $producto = Producto::where('codigo', (string) $codigo)->firstOrFail();
+            $producto = Producto::where('codigo', (int) $codigo)->firstOrFail();
             
-            // Asegurar que el código sea string
-            $data = $request->all();
-            $data['codigo'] = (string) $data['codigo'];
-            
-            $producto->update($data);
+            $producto->codigo = (int) $request->codigo;
+            $producto->nombre = $request->nombre;
+            $producto->descripcion = $request->descripcion;
+            $producto->cantidad = (int) $request->cantidad;
+            $producto->precio = $request->precio;
+            $producto->save();
             
             return redirect()->route('productos.index')
-                            ->with('success', 'Producto actualizado exitosamente.');
+                           ->with('success', 'Producto actualizado exitosamente.');
         } catch (\Exception $e) {
             Log::error('Error al actualizar producto: ' . $e->getMessage());
             return redirect()->back()
-                            ->with('error', 'Error al actualizar el producto.')
-                            ->withInput();
+                           ->with('error', 'Error al actualizar el producto: ' . $e->getMessage())
+                           ->withInput();
         }
     }
-         
+    
     // Eliminar producto
     public function destroy($codigo)
     {
         try {
             DB::beginTransaction();
             
-            $producto = Producto::where('codigo', (string) $codigo)->firstOrFail();
+            $producto = Producto::where('codigo', (int) $codigo)->firstOrFail();
             
             // Verificar si el producto tiene ventas registradas
             if ($producto->tieneVentas()) {
@@ -103,16 +137,15 @@ class ProductoController extends Controller
             }
             
             $producto->delete();
-            
             DB::commit();
             
             return redirect()->route('productos.index')
-                            ->with('success', 'Producto eliminado exitosamente.');
+                           ->with('success', 'Producto eliminado exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al eliminar producto: ' . $e->getMessage());
             return redirect()->route('productos.index')
-                            ->with('error', 'Error al eliminar el producto.');
+                           ->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
         }
     }
 }

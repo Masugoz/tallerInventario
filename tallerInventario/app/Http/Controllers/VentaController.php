@@ -6,6 +6,7 @@ use App\Models\Venta;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VentaController extends Controller
 {
@@ -22,7 +23,9 @@ class VentaController extends Controller
     // Mostrar formulario para registrar venta
     public function create()
     {
-        $productos = Producto::where('cantidad', '>', 0)->get();
+        $productos = Producto::where('cantidad', '>', 0)
+                            ->orderBy('nombre', 'asc')
+                            ->get();
         return view('ventas.create', compact('productos'));
     }
     
@@ -30,49 +33,56 @@ class VentaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:productos,codigo',
+            'product_id' => 'required|integer|exists:productos,codigo',
             'cantidad_vendida' => 'required|integer|min:1'
+        ], [
+            'product_id.required' => 'Debe seleccionar un producto.',
+            'product_id.integer' => 'El producto seleccionado no es válido.',
+            'product_id.exists' => 'El producto seleccionado no existe.',
+            'cantidad_vendida.required' => 'La cantidad a vender es obligatoria.',
+            'cantidad_vendida.integer' => 'La cantidad debe ser un número entero.',
+            'cantidad_vendida.min' => 'La cantidad debe ser mayor a 0.'
         ]);
 
         try {
-            // ⚡ Forzar el código a string
-            $codigo = strval($request->input('product_id'));
-
-            // ⚡ Buscar producto como string
-            $producto = Producto::where('codigo', $codigo)->firstOrFail();
+            DB::beginTransaction();
+            
+            // Obtener el producto
+            $codigo = (int) $request->product_id;
+            $producto = Producto::where('codigo', $codigo)->lockForUpdate()->firstOrFail();
 
             // Verificar stock disponible
             if ($request->cantidad_vendida > $producto->cantidad) {
+                DB::rollBack();
                 return redirect()->back()
-                    ->with('error', 'Stock insuficiente. Disponible: ' . $producto->cantidad)
+                    ->with('error', 'Stock insuficiente. Stock disponible: ' . $producto->cantidad . ' unidades.')
                     ->withInput();
             }
 
             // Calcular total
             $total = $request->cantidad_vendida * $producto->precio;
 
-            // ⚡ Transacción segura
-            DB::transaction(function () use ($codigo, $request, $producto, $total) {
-                // Crear la venta
-                Venta::create([
-                    'product_id'       => $codigo, // siempre string
-                    'cantidad_vendida' => $request->cantidad_vendida,
-                    'precio_unitario'  => $producto->precio,
-                    'total'            => $total,
-                    'fecha'            => now()
-                ]);
+            // Crear la venta
+            $venta = new Venta();
+            $venta->product_id = $codigo;
+            $venta->cantidad_vendida = (int) $request->cantidad_vendida;
+            $venta->precio_unitario = $producto->precio;
+            $venta->total = $total;
+            $venta->fecha = now();
+            $venta->save();
 
-                // ⚡ Actualizar stock forzando string en el WHERE
-                Producto::where('codigo', $codigo)
-                    ->update([
-                        'cantidad' => DB::raw("cantidad - " . intval($request->cantidad_vendida))
-                    ]);
-            });
+            // Actualizar stock del producto
+            $producto->cantidad = $producto->cantidad - $request->cantidad_vendida;
+            $producto->save();
+
+            DB::commit();
 
             return redirect()->route('ventas.index')
-                ->with('success', 'Venta registrada exitosamente.');
+                ->with('success', 'Venta registrada exitosamente. Total: $' . number_format($total, 2));
 
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al registrar venta: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Error al registrar la venta: ' . $e->getMessage())
                 ->withInput();
