@@ -123,29 +123,36 @@ class ProductoController extends Controller
     
     // Eliminar producto
     public function destroy($codigo)
-    {
-        try {
-            DB::beginTransaction();
-            
-            $producto = Producto::where('codigo', (int) $codigo)->firstOrFail();
-            
-            // Verificar si el producto tiene ventas registradas
-            if ($producto->tieneVentas()) {
-                DB::rollBack();
-                return redirect()->route('productos.index')
-                               ->with('error', 'No se puede eliminar el producto porque tiene ventas registradas.');
-            }
-            
-            $producto->delete();
-            DB::commit();
-            
+{
+    try {
+        // Forzar conexión nueva
+        DB::reconnect();
+        
+        $producto = Producto::where('codigo', (int) $codigo)->firstOrFail();
+        
+        // Verificar ventas directamente
+        $ventasCount = DB::table('ventas')->where('product_id', $codigo)->count();
+        
+        if ($ventasCount > 0) {
+            return redirect()->route('productos.index')
+                           ->with('error', 'No se puede eliminar el producto porque tiene ventas registradas.');
+        }
+        
+        // Eliminar directamente sin transacción manual
+        $deleted = DB::table('productos')->where('codigo', $codigo)->delete();
+        
+        if ($deleted) {
             return redirect()->route('productos.index')
                            ->with('success', 'Producto eliminado exitosamente.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error al eliminar producto: ' . $e->getMessage());
+        } else {
             return redirect()->route('productos.index')
-                           ->with('error', 'Error al eliminar el producto: ' . $e->getMessage());
+                           ->with('error', 'No se pudo eliminar el producto.');
         }
+        
+    } catch (\Exception $e) {
+        Log::error('Error al eliminar producto: ' . $e->getMessage());
+        return redirect()->route('productos.index')
+                       ->with('error', 'Error al eliminar el producto.');
     }
+}
 }
