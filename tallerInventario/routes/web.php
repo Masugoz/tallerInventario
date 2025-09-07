@@ -46,3 +46,12 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
 Route::fallback(function () {
     return redirect('/menu')->with('error', 'Página no encontrada. Redirigido al menú principal.');
 });
+
+// Ruta de prueba para debug
+Route::get('/test-debug', function() {
+    $productos = \App\Models\Producto::all();
+    return response()->json([
+        'productos_count' => $productos->count(),
+        'productos' => $productos->toArray()
+    ]);
+});

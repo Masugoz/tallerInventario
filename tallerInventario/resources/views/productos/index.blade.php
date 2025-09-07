@@ -3,254 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionar Productos - Inventario</title>
+    <title>Gestionar Productos</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f4f4; 
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 30px;
-            font-size: 2.2em;
         }
         .actions {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 10px;
         }
-        .btn {
-            padding: 12px 20px;
+        .btn { 
+            padding: 10px 15px; 
+            border: none; 
+            border-radius: 4px;
+            cursor: pointer; 
             text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
             display: inline-block;
-            font-size: 14px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-            padding: 8px 12px;
             font-size: 12px;
             margin-right: 5px;
         }
-        .btn-warning:hover {
-            background-color: #e0a800;
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn:hover { opacity: 0.9; }
+        
+        .alert { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px;
         }
-        .btn-danger {
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            font-weight: bold; 
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f0f0f0; }
+        
+        .codigo { text-align: center; font-weight: bold; color: #007bff; }
+        .precio { text-align: right; font-weight: bold; }
+        .cantidad { text-align: center; }
+        .table-actions { white-space: nowrap; text-align: center; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
             background-color: #dc3545;
             color: white;
-            padding: 8px 12px;
-            font-size: 12px;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
         }
-        .btn-danger:hover {
-            background-color: #c82333;
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
         }
-        .alert {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: 500;
+        
+        .modal-body {
+            padding: 20px;
+            text-align: center;
         }
-        .alert-success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+        
+        .modal-body p {
+            margin: 10px 0;
+            color: #333;
+            line-height: 1.5;
         }
-        .alert-error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-        .table-responsive {
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #dee2e6;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
+        
+        .product-info {
             background-color: #f8f9fa;
-            font-weight: bold;
-            color: #495057;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 3px solid #007bff;
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f0f0f0;
-        }
-        .no-products {
+        
+        .modal-footer {
+            padding: 15px 20px;
             text-align: center;
-            padding: 60px 20px;
-            color: #666;
+            border-top: 1px solid #eee;
         }
-        .no-products h3 {
-            color: #999;
-            margin-bottom: 20px;
-        }
-        .table-actions {
-            white-space: nowrap;
-            text-align: center;
-        }
-        .codigo {
-            text-align: center;
-            font-weight: bold;
-            color: #007bff;
-        }
-        .precio {
-            text-align: right;
-            font-weight: bold;
-        }
-        .cantidad {
-            text-align: center;
-        }
-        .stock-low {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        .stock-medium {
-            color: #ffc107;
-            font-weight: bold;
-        }
-        .stock-high {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .nombre-producto {
-            font-weight: 500;
+        
+        .modal-footer .btn {
+            margin: 0 5px;
+            padding: 8px 20px;
         }
         
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                margin: 10px;
-            }
-            table {
-                font-size: 12px;
-            }
-            th, td {
-                padding: 8px 4px;
-            }
-            .btn {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-            .actions {
-                flex-direction: column;
-            }
+            .container { margin: 10px; padding: 15px; }
+            table { font-size: 12px; }
+            th, td { padding: 6px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📦 Gestionar Productos</h1>
+        <h1>Gestionar Productos</h1>
         
-        <!-- Mensajes de éxito/error -->
         @if(session('success'))
-            <div class="alert alert-success">
-                ✅ {{ session('success') }}
-            </div>
+            <div class="alert alert-success">{{ session('success') }}</div>
         @endif
         
         @if(session('error'))
-            <div class="alert alert-error">
-                ❌ {{ session('error') }}
-            </div>
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
         
-        <!-- Botones de acción -->
         <div class="actions">
-            <a href="{{ route('productos.create') }}" class="btn btn-primary">➕ Agregar Nuevo Producto</a>
-            <a href="/menu" class="btn btn-secondary">🏠 Regresar al Menú</a>
+            <a href="{{ route('productos.create') }}" class="btn btn-primary">Agregar Nuevo Producto</a>
+            <a href="/menu" class="btn btn-secondary">Regresar al Menu</a>
         </div>
         
-        <!-- Tabla de productos -->
         @if($productos->count() > 0)
-            <div class="table-responsive">
-                <table>
-                    <thead>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($productos as $producto)
                         <tr>
-                            <th>Código</th>
-                            <th>Nombre Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio</th>
-                            <th>Acciones</th>
+                            <td class="codigo">{{ $producto->codigo }}</td>
+                            <td>{{ $producto->nombre }}</td>
+                            <td class="cantidad">{{ $producto->cantidad }}</td>
+                            <td class="precio">${{ number_format($producto->precio, 2) }}</td>
+                            <td class="table-actions">
+                                <a href="{{ route('productos.edit', $producto->codigo) }}" class="btn btn-warning">Editar</a>
+                                <button type="button" class="btn btn-danger" 
+                                        onclick="showDeleteModal('{{ $producto->codigo }}', '{{ addslashes($producto->nombre) }}', '{{ $producto->cantidad }}')">
+                                    Eliminar
+                                </button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($productos as $producto)
-                            <tr>
-                                <td class="codigo">{{ $producto->codigo }}</td>
-                                <td class="nombre-producto">{{ $producto->nombre }}</td>
-                                <td class="cantidad">
-                                    <span class="{{ $producto->cantidad <= 5 ? 'stock-low' : ($producto->cantidad <= 20 ? 'stock-medium' : 'stock-high') }}">
-                                        {{ $producto->cantidad }}
-                                    </span>
-                                </td>
-                                <td class="precio">${{ number_format($producto->precio, 2) }}</td>
-                                <td class="table-actions">
-                                    <a href="{{ route('productos.edit', $producto->codigo) }}" class="btn btn-warning">✏️ Editar</a>
-                                    <form action="{{ route('productos.destroy', $producto->codigo) }}" method="POST" style="display: inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar este producto?\\n\\nProducto: {{ $producto->nombre }}\\nCódigo: {{ $producto->codigo }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
-                <strong>Total de productos:</strong> {{ $productos->count() }}
-                <br>
-                <strong>Valor total del inventario:</strong> ${{ number_format($productos->sum(function($p) { return $p->precio * $p->cantidad; }), 2) }}
-            </div>
+                    @endforeach
+                </tbody>
+            </table>
         @else
-            <div class="no-products">
-                <h3>📋 No hay productos registrados</h3>
+            <div style="text-align: center; padding: 40px; color: #666;">
                 <p>No hay productos registrados en el sistema.</p>
-                <a href="{{ route('productos.create') }}" class="btn btn-primary">➕ Agregar Primer Producto</a>
+                <a href="{{ route('productos.create') }}" class="btn btn-primary">Agregar Primer Producto</a>
             </div>
         @endif
     </div>
+
+    <!-- Modal de Confirmación -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirmar Eliminación</h3>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea eliminar este producto?</p>
+                <div class="product-info">
+                    <p><strong>Producto:</strong> <span id="modalProductName"></span></p>
+                    <p><strong>Código:</strong> <span id="modalProductCode"></span></p>
+                    <p><strong>Stock actual:</strong> <span id="modalProductStock"></span> unidades</p>
+                </div>
+                <p style="color: #dc3545; font-weight: bold;">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Sí, Eliminar</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form oculto para eliminación -->
+    <form id="deleteForm" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+
+    <script>
+        let currentProductCode = null;
+
+        function showDeleteModal(codigo, nombre, stock) {
+            currentProductCode = codigo;
+            document.getElementById('modalProductName').textContent = nombre;
+            document.getElementById('modalProductCode').textContent = codigo;
+            document.getElementById('modalProductStock').textContent = stock;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            currentProductCode = null;
+        }
+
+        function confirmDelete() {
+            if (currentProductCode) {
+                const form = document.getElementById('deleteForm');
+                form.action = '/productos/' + currentProductCode;
+                form.submit();
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
 </body>
 </html>
